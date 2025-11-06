@@ -1,5 +1,18 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model HrApp.MVC.Models.EmployeeViewModel
+
+<h2>წაშლა</h2>
+
+<div class="alert alert-warning">ნამდვილად გსურთ თანამშრომლის წაშლა?</div>
+
+<dl class="row">
+    <dt class="col-sm-2">სახელი</dt>
+    <dd class="col-sm-10">@Model.FirstName</dd>
+    <dt class="col-sm-2">გვარი</dt>
+    <dd class="col-sm-10">@Model.LastName</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">დიახ</button>
+    <a asp-action="Index" class="btn btn-secondary">არა</a>
+</form>

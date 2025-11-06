@@ -1,6 +1,30 @@
 ﻿@model HrApp.MVC.Models.LoginViewModel
-<form asp-action="Login" method="post">
-    <input asp-for="Email" placeholder="Email" />
-    <input asp-for="Password" type="password" placeholder="Password" />
-    <button type="submit">Login</button>
-</form>
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-12 col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h3 class="mb-3 text-center">შესვლა</h3>
+                <form method="post" action="/Account/Login" class="mt-2">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">Email</label>
+                        <input id="Email" name="Email" type="email" class="form-control" value="@Model?.Email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Password" class="form-label">Password</label>
+                        <input id="Password" name="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">შესვლა</button>
+                        <a asp-action="Register" class="btn btn-outline-secondary">რეგისტრაცია</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_ValidationScriptsPartial" />

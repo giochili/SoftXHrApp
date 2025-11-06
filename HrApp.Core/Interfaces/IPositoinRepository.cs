@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using HrApp.Core.Entities;
+
 namespace HrApp.Core.Interfaces
 {
-    internal interface IPositoinRepository
+    public interface IPositionRepository : IRepository<Position>
     {
+        Task<IReadOnlyList<Position>> GetHierarchyAsync();
     }
 }

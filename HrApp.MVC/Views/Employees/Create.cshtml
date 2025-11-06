@@ -1,5 +1,61 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model HrApp.MVC.Models.EmployeeViewModel
+
+<h2>თანამშრომლის დამატება</h2>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label class="form-label">პირადი ნომერი</label>
+        <input asp-for="PersonalNumber" class="form-control" />
+        <span asp-validation-for="PersonalNumber" class="text-danger"></span>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">სახელი</label>
+            <input asp-for="FirstName" class="form-control" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">გვარი</label>
+            <input asp-for="LastName" class="form-control" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">სქესი</label>
+            <select asp-for="Gender" class="form-select">
+                <option value="1">კაცი</option>
+                <option value="2">ქალი</option>
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">დაბ. თარიღი</label>
+            <input asp-for="BirthDate" type="date" class="form-control" />
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">ელ.ფოსტა</label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">პოზიცია (Id)</label>
+            <input asp-for="PositionId" class="form-control" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">სტატუსი</label>
+            <select asp-for="Status" class="form-select">
+                <option value="0">Inactive</option>
+                <option value="1">Active</option>
+                <option value="2">OffStaff</option>
+                <option value="3">Fired</option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">დათხოვნის თარიღი</label>
+        <input asp-for="DismissalDate" type="date" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">შენახვა</button>
+    <a asp-action="Index" class="btn btn-secondary">უკან</a>
+</form>
+
+<partial name="_ValidationScriptsPartial" />

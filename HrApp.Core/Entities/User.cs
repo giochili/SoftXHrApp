@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using HrApp.Core.Enums;
+
 namespace HrApp.Core.Entities
 {
     public class User
@@ -12,7 +14,7 @@ namespace HrApp.Core.Entities
         public string PersonalNumber { get; set; } = null!;
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
-        public string Gender { get; set; } = null!;
+        public Gender Gender { get; set; }
         public DateTime BirthDate { get; set; }
         public string Email { get; set; } = null!;
         public string PasswordHash { get; set; } = null!;

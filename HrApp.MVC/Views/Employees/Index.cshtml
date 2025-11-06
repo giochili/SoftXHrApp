@@ -1,5 +1,63 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model IEnumerable<HrApp.MVC.Models.EmployeeViewModel>
+
+@if (TempData["t"] != null)
+{
+    <div class="alert alert-info">@TempData["t"]</div>
 }
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">თანამშრომლები</h4>
+            <a class="btn btn-success" asp-action="Create">+ დამატება</a>
+        </div>
+
+        <form method="get" asp-action="Index" class="mb-3">
+            <div class="input-group">
+                <input type="text" class="form-control" name="q" value="@ViewData["q"]" placeholder="ძებნა სახელით/გვარით" />
+                <button class="btn btn-primary" type="submit">ძებნა</button>
+            </div>
+        </form>
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success">@TempData["Message"]</div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="text-center text-muted py-5">ჩანაწერები არ მოიძებნა</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>პირადი ნომერი</th>
+                            <th>სახელი</th>
+                            <th>გვარი</th>
+                            <th>ელ.ფოსტა</th>
+                            <th class="text-end">ქმედებები</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var e in Model)
+                    {
+                        <tr>
+                            <td>@e.PersonalNumber</td>
+                            <td>@e.FirstName</td>
+                            <td>@e.LastName</td>
+                            <td>@e.Email</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@e.Id">რედაქტირება</a>
+                                <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@e.Id">წაშლა</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
