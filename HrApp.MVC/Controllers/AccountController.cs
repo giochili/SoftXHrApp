@@ -31,7 +31,6 @@ namespace HrApp.MVC.Controllers
             if (result.Success && !string.IsNullOrWhiteSpace(result.Token))
             {
                 HttpContext.Session.SetString("jwt", result.Token);
-                TempData["t"] = "set";
                 return RedirectToAction("Index", "Employees");
             }
 
@@ -56,13 +55,11 @@ namespace HrApp.MVC.Controllers
             if (result.Success && !string.IsNullOrWhiteSpace(result.Token))
             {
                 HttpContext.Session.SetString("jwt", result.Token);
-                TempData["t"] = $"ok:1 token:len:{result.Token.Length}";
                 return RedirectToAction("Index", "Employees");
             }
             if (result.Success && !string.IsNullOrWhiteSpace(result.Token))
             {
                 HttpContext.Session.SetString("jwt", result.Token);
-                TempData["t"] = $"ok:1 token:len:{result.Token.Length}";
                 return RedirectToAction("Index", "Employees");
             }
 

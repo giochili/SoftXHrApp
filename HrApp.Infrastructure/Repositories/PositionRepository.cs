@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿using System.Collections.Generic;
 using HrApp.Core.Entities;
 using HrApp.Core.Interfaces;
 using HrApp.Infrastructure.Data;
@@ -19,10 +14,29 @@ namespace HrApp.Infrastructure.Repositories
 
         public async Task<IReadOnlyList<Position>> GetHierarchyAsync()
         {
-            // Load full tree (simple approach)
-            return await DbContext.Positions
-                .Include(p => p.SubPositions)
-                .ToListAsync();
+            var positions = await DbContext.Positions.AsNoTracking().ToListAsync();
+            var lookup = positions.ToDictionary(p => p.Id);
+
+            foreach (var position in positions)
+            {
+                position.SubPositions = new List<Position>();
+            }
+
+            var roots = new List<Position>();
+
+            foreach (var position in positions)
+            {
+                if (position.ParentPositionId.HasValue && lookup.TryGetValue(position.ParentPositionId.Value, out var parent))
+                {
+                    parent.SubPositions!.Add(position);
+                }
+                else
+                {
+                    roots.Add(position);
+                }
+            }
+
+            return roots;
         }
     }
 }

@@ -1,11 +1,73 @@
 ﻿@model HrApp.MVC.Models.RegisterViewModel
 
-<form asp-action="Register" method="post">
-    <input asp-for="PersonalNumber" placeholder="პირადი ნომერი" />
-    <input asp-for="FirstName" placeholder="სახელი" />
-    <input asp-for="LastName" placeholder="გვარი" />
-    <input asp-for="Email" placeholder="Email" />
-    <input asp-for="Password" type="password" placeholder="Password" />
-    <input asp-for="ConfirmPassword" type="password" placeholder="Confirm Password" />
-    <button type="submit">Register</button>
-</form>
+<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div class="card shadow-lg border-0 rounded-4" style="width: 420px;">
+        <div class="card-body p-4">
+            <h3 class="text-center mb-4 fw-bold text-primary">რეგისტრაცია</h3>
+
+            <form asp-action="Register" method="post">
+                <div class="form-floating mb-3">
+                    <input asp-for="PersonalNumber" class="form-control rounded-3" placeholder="პირადი ნომერი" />
+                    <label asp-for="PersonalNumber">პირადი ნომერი</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="FirstName" class="form-control rounded-3" placeholder="სახელი" />
+                    <label asp-for="FirstName">სახელი</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="LastName" class="form-control rounded-3" placeholder="გვარი" />
+                    <label asp-for="LastName">გვარი</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" type="email" class="form-control rounded-3" placeholder="Email" />
+                    <label asp-for="Email">Email</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Password" type="password" class="form-control rounded-3" placeholder="Password" />
+                    <label asp-for="Password">პაროლი</label>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <input asp-for="ConfirmPassword" type="password" class="form-control rounded-3" placeholder="Confirm Password" />
+                    <label asp-for="ConfirmPassword">დაადასტურე პაროლი</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-semibold">
+                    რეგისტრაცია
+                </button>
+
+                <div class="text-center mt-3">
+                    <small>უკვე გაქვს ანგარიში? 
+                        <a href="/Account/Login" class="text-decoration-none text-primary fw-semibold">შესვლა</a>
+                    </small>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        body {
+            background: linear-gradient(135deg, #f3f4f6, #e9efff);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
+}

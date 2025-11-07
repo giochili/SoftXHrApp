@@ -1,0 +1,17 @@
+@model IEnumerable<HrApp.MVC.Models.PositionTreeViewModel>
+
+@if (Model == null || !Model.Any())
+{
+    return;
+}
+
+<ul class="position-tree list-unstyled ms-3">
+@foreach (var node in Model)
+{
+    <li>
+        <span class="fw-semibold">@node.Title</span>
+        @await Html.PartialAsync("_PositionTree", node.Children)
+    </li>
+}
+</ul>
+

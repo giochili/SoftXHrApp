@@ -11,5 +11,11 @@ namespace HrApp.MVC.Services
         Task<ApiResponse> CreateEmployeeAsync(EmployeeViewModel model);
         Task<ApiResponse> UpdateEmployeeAsync(int id, EmployeeViewModel model);
         Task<bool> DeleteEmployeeAsync(int id);
+        Task<List<PositionTreeViewModel>> GetPositionsHierarchyAsync();
+        Task<List<PositionViewModel>> GetPositionsAsync();
+        Task<PositionViewModel?> GetPositionAsync(int id);
+        Task<ApiResponse> CreatePositionAsync(PositionViewModel model);
+        Task<ApiResponse> UpdatePositionAsync(int id, PositionViewModel model);
+        Task<bool> DeletePositionAsync(int id);
     }
 }

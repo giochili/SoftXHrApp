@@ -2,43 +2,60 @@
 using HrApp.MVC.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace HrApp.MVC.Controllers
 {
     public class EmployeesController : Controller
     {
         private readonly IApiService _apiService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public EmployeesController(IApiService apiService, IHttpContextAccessor httpContextAccessor)
+        public EmployeesController(IApiService apiService, IHttpContextAccessor httpContextAccessor)
         {
             _apiService = apiService;
-        _httpContextAccessor = httpContextAccessor;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IActionResult> Index(string? q)
         {
-        if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
-            return RedirectToAction("Login", "Account");
+            if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
+                return RedirectToAction("Login", "Account");
+
             var employees = await _apiService.GetEmployeesAsync(q);
-            ViewData["q"] = q;
-            return View(employees);
+            var positions = await _apiService.GetPositionsHierarchyAsync();
+
+            var viewModel = new EmployeesIndexViewModel
+            {
+                Employees = employees,
+                Positions = positions,
+                Query = q
+            };
+
+            return View(viewModel);
         }
 
         [HttpGet]
-    public IActionResult Create()
-    {
-        if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
-            return RedirectToAction("Login", "Account");
-        return View(new EmployeeViewModel());
-    }
+        public async Task<IActionResult> Create()
+        {
+            if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
+                return RedirectToAction("Login", "Account");
+
+            await PopulatePositionOptions();
+            return View(new EmployeeViewModel());
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create(EmployeeViewModel model)
         {
-        if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
-            return RedirectToAction("Login", "Account");
-            if (!ModelState.IsValid) return View(model);
+            if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
+                return RedirectToAction("Login", "Account");
+
+            if (!ModelState.IsValid)
+            {
+                await PopulatePositionOptions();
+                return View(model);
+            }
             var result = await _apiService.CreateEmployeeAsync(model);
             if (result.Success)
             {
@@ -46,6 +63,7 @@ namespace HrApp.MVC.Controllers
                 return RedirectToAction("Index");
             }
             ModelState.AddModelError("", result.Message ?? "დაფიქსირდა შეცდომა");
+            await PopulatePositionOptions();
             return View(model);
         }
 
@@ -99,6 +117,39 @@ namespace HrApp.MVC.Controllers
             ModelState.AddModelError("", "დაფიქსირდა შეცდომა");
             var employee = await _apiService.GetEmployeeAsync(id);
             return View("Delete", employee);
+        }
+
+        private async Task PopulatePositionOptions()
+        {
+            var hierarchy = await _apiService.GetPositionsHierarchyAsync();
+            var items = new List<SelectListItem>();
+
+            void Flatten(PositionTreeViewModel node, int depth)
+            {
+                var prefix = depth > 0 ? new string('·', depth) + " " : string.Empty;
+                items.Add(new SelectListItem
+                {
+                    Value = node.Id.ToString(),
+                    Text = prefix + node.Title
+                });
+
+                if (node.Children == null || node.Children.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var child in node.Children)
+                {
+                    Flatten(child, depth + 1);
+                }
+            }
+
+            foreach (var node in hierarchy)
+            {
+                Flatten(node, 0);
+            }
+
+            ViewBag.PositionOptions = items;
         }
     }
 }

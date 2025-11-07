@@ -1,0 +1,23 @@
+@model HrApp.MVC.Models.PositionViewModel
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h4 class="text-danger mb-3">პოზიციის წაშლა</h4>
+        <p>დარწმუნებული ხართ, რომ გსურთ წაშალოთ ეს პოზიცია?</p>
+
+        <dl class="row">
+            <dt class="col-sm-3">დასახელება</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+            <dt class="col-sm-3">მშობელი</dt>
+            <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.ParentTitle) ? "(ფესვი)" : Model.ParentTitle)</dd>
+        </dl>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">გაუქმება</a>
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">წაშლა</button>
+        </form>
+    </div>
+</div>
+

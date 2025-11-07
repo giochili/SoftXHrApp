@@ -13,6 +13,6 @@ namespace HrApp.Core.Entities
         public int? ParentPositionId { get; set; }
 
         public Position? ParentPosition { get; set; }
-        public ICollection<Position>? SubPositions { get; set; }
+        public ICollection<Position>? SubPositions { get; set; } = new List<Position>();
     }
 }

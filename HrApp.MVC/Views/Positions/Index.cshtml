@@ -1,9 +1,4 @@
-﻿@model HrApp.MVC.Models.EmployeesIndexViewModel
-
-@if (TempData["t"] != null)
-{
-    <div class="alert alert-info">@TempData["t"]</div>
-}
+@model HrApp.MVC.Models.PositionsPageViewModel
 
 @if (TempData["Message"] != null)
 {
@@ -11,24 +6,17 @@
 }
 
 <div class="row g-4">
-    <div class="col-lg-8">
+    <div class="col-lg-6">
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">თანამშრომლები</h4>
+                    <h4 class="mb-0">პოზიციების სია</h4>
                     <a class="btn btn-success" asp-action="Create">+ დამატება</a>
                 </div>
 
-                <form method="get" asp-action="Index" class="mb-3">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="q" value="@Model.Query" placeholder="ძებნა სახელით/გვარით" />
-                        <button class="btn btn-primary" type="submit">ძებნა</button>
-                    </div>
-                </form>
-
-                @if (!Model.Employees.Any())
+                @if (!Model.Positions.Any())
                 {
-                    <div class="text-center text-muted py-5">ჩანაწერები არ მოიძებნა</div>
+                    <div class="text-muted">ჩანაწერები არ მოიძებნა</div>
                 }
                 else
                 {
@@ -36,26 +24,20 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>პირადი ნომერი</th>
-                                    <th>სახელი</th>
-                                    <th>გვარი</th>
-                                    <th>პოზიცია</th>
-                                    <th>ელ.ფოსტა</th>
+                                    <th>დასახელება</th>
+                                    <th>მშობელი</th>
                                     <th class="text-end">ქმედებები</th>
                                 </tr>
                             </thead>
                             <tbody>
-                            @foreach (var e in Model.Employees)
+                            @foreach (var pos in Model.Positions)
                             {
                                 <tr>
-                                    <td>@e.PersonalNumber</td>
-                                    <td>@e.FirstName</td>
-                                    <td>@e.LastName</td>
-                                    <td>@(string.IsNullOrEmpty(e.PositionTitle) ? "-" : e.PositionTitle)</td>
-                                    <td>@e.Email</td>
+                                    <td>@pos.Title</td>
+                                    <td>@(string.IsNullOrWhiteSpace(pos.ParentTitle) ? "(ფესვი)" : pos.ParentTitle)</td>
                                     <td class="text-end">
-                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@e.Id">რედაქტირება</a>
-                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@e.Id">წაშლა</a>
+                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@pos.Id">რედაქტირება</a>
+                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@pos.Id">წაშლა</a>
                                     </td>
                                 </tr>
                             }
@@ -67,20 +49,13 @@
         </div>
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <h5 class="mb-3">პოზიციების იერარქია</h5>
-                @if (!Model.Positions.Any())
-                {
-                    <div class="text-muted">პოზიციების მონაცემი ვერ ჩაიტვირთა</div>
-                }
-                else
-                {
-                    <div class="position-tree-wrapper">
-                        @await Html.PartialAsync("_PositionTree", Model.Positions)
-                    </div>
-                }
+                <div class="position-tree-wrapper">
+                    @await Html.PartialAsync("_PositionTree", Model.Tree)
+                </div>
             </div>
         </div>
     </div>
@@ -129,3 +104,4 @@
         display: inline-block;
     }
 </style>
+

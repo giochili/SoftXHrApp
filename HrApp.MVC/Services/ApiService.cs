@@ -71,15 +71,46 @@ namespace HrApp.MVC.Services
         public async Task<List<EmployeeViewModel>> GetEmployeesAsync(string? query = null)
         {
             AttachBearer();
-            var path = string.IsNullOrWhiteSpace(query) ? "api/Employees/GetAll" : $"api/Employees/GetAll?q={Uri.EscapeDataString(query)}";
+            var path = string.IsNullOrWhiteSpace(query) ? "api/Employees" : $"api/Employees?q={Uri.EscapeDataString(query)}";
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<EmployeeViewModel>>(path);
-                return response ?? new List<EmployeeViewModel>();
+                var httpResponse = await _httpClient.GetAsync(path);
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    var body = await httpResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"GetEmployees failed: {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase} - {body}");
+                    return new List<EmployeeViewModel>();
+                }
+                var employees = await httpResponse.Content.ReadFromJsonAsync<List<EmployeeViewModel>>();
+                return employees ?? new List<EmployeeViewModel>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"GetEmployees exception: {ex.Message}");
                 return new List<EmployeeViewModel>();
+            }
+        }
+
+        public async Task<List<PositionTreeViewModel>> GetPositionsHierarchyAsync()
+        {
+            AttachBearer();
+            try
+            {
+                var httpResponse = await _httpClient.GetAsync("api/Positions/hierarchy");
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    var body = await httpResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"GetPositionsHierarchy failed: {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase} - {body}");
+                    return new List<PositionTreeViewModel>();
+                }
+
+                var nodes = await httpResponse.Content.ReadFromJsonAsync<List<PositionTreeViewModel>>();
+                return nodes ?? new List<PositionTreeViewModel>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetPositionsHierarchy exception: {ex.Message}");
+                return new List<PositionTreeViewModel>();
             }
         }
 
@@ -87,6 +118,43 @@ namespace HrApp.MVC.Services
         {
             AttachBearer();
             return await _httpClient.GetFromJsonAsync<EmployeeViewModel>($"api/Employees/{id}");
+        }
+
+        public async Task<List<PositionViewModel>> GetPositionsAsync()
+        {
+            AttachBearer();
+            try
+            {
+                var httpResponse = await _httpClient.GetAsync("api/Positions");
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    var body = await httpResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"GetPositions failed: {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase} - {body}");
+                    return new List<PositionViewModel>();
+                }
+
+                var positions = await httpResponse.Content.ReadFromJsonAsync<List<PositionViewModel>>();
+                return positions ?? new List<PositionViewModel>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetPositions exception: {ex.Message}");
+                return new List<PositionViewModel>();
+            }
+        }
+
+        public async Task<PositionViewModel?> GetPositionAsync(int id)
+        {
+            AttachBearer();
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<PositionViewModel>($"api/Positions/{id}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetPosition exception: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<ApiResponse> CreateEmployeeAsync(EmployeeViewModel model)
@@ -120,6 +188,37 @@ namespace HrApp.MVC.Services
             return response.IsSuccessStatusCode;
         }
  
+        public async Task<ApiResponse> CreatePositionAsync(PositionViewModel model)
+        {
+            AttachBearer();
+            var response = await _httpClient.PostAsJsonAsync("api/Positions/Create", model);
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await SafeRead<ApiResponse>(response);
+                return err ?? new ApiResponse { Success = false };
+            }
+            return new ApiResponse { Success = true };
+        }
+
+        public async Task<ApiResponse> UpdatePositionAsync(int id, PositionViewModel model)
+        {
+            AttachBearer();
+            var response = await _httpClient.PutAsJsonAsync($"api/Positions/{id}", model);
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await SafeRead<ApiResponse>(response);
+                return err ?? new ApiResponse { Success = false };
+            }
+            return new ApiResponse { Success = true };
+        }
+
+        public async Task<bool> DeletePositionAsync(int id)
+        {
+            AttachBearer();
+            var response = await _httpClient.DeleteAsync($"api/Positions/{id}");
+            return response.IsSuccessStatusCode;
+        }
+
         private static async Task<T?> SafeRead<T>(HttpResponseMessage response) where T : class
         {
             try

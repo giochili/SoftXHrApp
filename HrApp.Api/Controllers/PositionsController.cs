@@ -1,5 +1,8 @@
-﻿using HrApp.Core.Entities;
+﻿using System.Collections.Generic;
+using System.Linq;
+using HrApp.Core.Entities;
 using HrApp.Core.Interfaces;
+using HrApp.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -17,6 +20,7 @@ namespace HrApp.Api.Controllers
             _positionRepository = positionRepository;
         }
 
+        [HttpGet]
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
@@ -27,10 +31,25 @@ namespace HrApp.Api.Controllers
         [HttpGet("hierarchy")]
         public async Task<IActionResult> GetHierarchy()
         {
-            var positions = await _positionRepository.GetHierarchyAsync();
-            return Ok(positions);
+            var roots = await _positionRepository.GetHierarchyAsync();
+            var dto = roots.Select(MapToTreeDto).ToList();
+            return Ok(dto);
         }
 
+        private static PositionTreeDto MapToTreeDto(Position position)
+        {
+            return new PositionTreeDto
+            {
+                Id = position.Id,
+                Title = position.Title,
+                ParentPositionId = position.ParentPositionId,
+                Children = (position.SubPositions ?? new List<Position>())
+                    .Select(MapToTreeDto)
+                    .ToList()
+            };
+        }
+
+        [HttpPost]
         [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] Position model)
         {

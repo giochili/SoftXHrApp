@@ -1,6 +1,7 @@
 ﻿using HrApp.Core.Entities;
 using HrApp.Core.Enums;
 using HrApp.Core.Interfaces;
+using HrApp.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -20,6 +21,7 @@ namespace HrApp.Api.Controllers
             _positionRepository = positionRepository;
         }
 
+        [HttpGet]
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] string? q)
         {
@@ -36,7 +38,7 @@ namespace HrApp.Api.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<IActionResult> Create([FromBody] Employee model)
+        public async Task<IActionResult> Create([FromBody] CreateEmployeeDto model)
         {
             if (model.PersonalNumber == null || model.PersonalNumber.Length != 11 || !model.PersonalNumber.All(char.IsDigit))
                 return BadRequest(new { Success = false, Message = "პირადი ნომერი უნდა იყოს 11 ციფრი" });
@@ -53,15 +55,27 @@ namespace HrApp.Api.Controllers
             if (await _employeeRepository.ExistsByPersonalNumberOrEmailAsync(model.PersonalNumber, model.Email))
                 return BadRequest(new { Success = false, Message = "ასეთი თანამშრომელი უკვე არსებობს" });
 
-            model.Status = EmployeeStatus.Inactive; // required by spec
-            model.IsActive = false;
+            var entity = new Employee
+            {
+                PersonalNumber = model.PersonalNumber,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Gender = (Gender)model.Gender,
+                BirthDate = model.BirthDate,
+                Email = model.Email,
+                PositionId = model.PositionId,
+                Status = (EmployeeStatus)model.Status,
+                DismissalDate = model.DismissalDate,
+                IsActive = false
+            };
+            entity.Status = EmployeeStatus.Inactive;
 
-            var created = await _employeeRepository.AddAsync(model);
+            var created = await _employeeRepository.AddAsync(entity);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Employee model)
+        public async Task<IActionResult> Update(int id, [FromBody] CreateEmployeeDto model)
         {
             var existing = await _employeeRepository.GetByIdAsync(id);
             if (existing == null) return NotFound();
@@ -74,11 +88,11 @@ namespace HrApp.Api.Controllers
             existing.PersonalNumber = model.PersonalNumber;
             existing.FirstName = model.FirstName;
             existing.LastName = model.LastName;
-            existing.Gender = model.Gender;
+            existing.Gender = (Gender)model.Gender;
             existing.BirthDate = model.BirthDate;
             existing.Email = model.Email;
             existing.PositionId = model.PositionId;
-            existing.Status = model.Status;
+            existing.Status = (EmployeeStatus)model.Status;
             existing.DismissalDate = model.DismissalDate;
 
             await _employeeRepository.UpdateAsync(existing);

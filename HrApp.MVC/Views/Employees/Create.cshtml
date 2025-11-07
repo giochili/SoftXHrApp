@@ -35,10 +35,22 @@
         <label class="form-label">ელ.ფოსტა</label>
         <input asp-for="Email" class="form-control" />
     </div>
+@{
+    var positionOptions = ViewBag.PositionOptions as List<SelectListItem> ?? new List<SelectListItem>();
+}
+
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label class="form-label">პოზიცია (Id)</label>
-            <input asp-for="PositionId" class="form-control" />
+            <label class="form-label">პოზიცია</label>
+            @if (!positionOptions.Any())
+            {
+                <div class="text-muted small">პოზიციების ჩამონათვალი ვერ ჩაიტვირთა</div>
+            }
+            else
+            {
+                @Html.DropDownListFor(m => m.PositionId, positionOptions, "აირჩიეთ პოზიცია", new { @class = "form-select" })
+            }
+            <span asp-validation-for="PositionId" class="text-danger"></span>
         </div>
         <div class="col-md-6 mb-3">
             <label class="form-label">სტატუსი</label>
