@@ -14,6 +14,8 @@ namespace HrApp.MVC.Models
         public int PositionId { get; set; }
         public int Status { get; set; }
         public DateTime? DismissalDate { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public PositionSummaryViewModel? Position { get; set; }
         public string PositionTitle => Position?.Title ?? string.Empty;

@@ -28,6 +28,27 @@
                         </li>
                     </ul>
                     <div class="d-flex align-items-center gap-2 ms-auto">
+                        @{
+                            var token = ViewContext.HttpContext.Session.GetString("jwt");
+                            string userName = null;
+                            if (!string.IsNullOrEmpty(token))
+                            {
+                                try
+                                {
+                                    var handler = new JwtSecurityTokenHandler();
+                                    var jsonToken = handler.ReadJwtToken(token);
+                                    userName = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                                }
+                                catch
+                                {
+                                    // If token parsing fails, userName remains null
+                                }
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(userName))
+                        {
+                            <span class="text-light me-2 d-none d-md-inline">გამარჯობა @userName</span>
+                        }
                         <button id="themeToggle" class="btn btn-sm btn-outline-light" type="button" aria-label="Toggle theme">Theme</button>
                         <ul class="navbar-nav">
                             @if (ViewContext.HttpContext.Session.GetString("jwt") != null)

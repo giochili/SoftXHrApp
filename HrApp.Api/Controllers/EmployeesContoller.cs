@@ -4,6 +4,7 @@ using HrApp.Core.Interfaces;
 using HrApp.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Quartz;
 
 namespace HrApp.Api.Controllers
 {
@@ -14,11 +15,13 @@ namespace HrApp.Api.Controllers
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IPositionRepository _positionRepository;
+        private readonly ISchedulerFactory _schedulerFactory;
 
-        public EmployeesContoller(IEmployeeRepository employeeRepository, IPositionRepository positionRepository)
+        public EmployeesContoller(IEmployeeRepository employeeRepository, IPositionRepository positionRepository, ISchedulerFactory schedulerFactory)
         {
             _employeeRepository = employeeRepository;
             _positionRepository = positionRepository;
+            _schedulerFactory = schedulerFactory;
         }
 
         [HttpGet]
@@ -55,6 +58,14 @@ namespace HrApp.Api.Controllers
             if (await _employeeRepository.ExistsByPersonalNumberOrEmailAsync(model.PersonalNumber, model.Email))
                 return BadRequest(new { Success = false, Message = "ასეთი თანამშრომელი უკვე არსებობს" });
 
+            var today = DateTime.UtcNow.Date;
+            var birthDate = model.BirthDate.Date;
+            var minDate = today.AddYears(-100);
+            if (birthDate > today)
+                return BadRequest(new { Success = false, Message = "დაბადების თარიღი არ შეიძლება იყოს მომავალი" });
+            if (birthDate < minDate)
+                return BadRequest(new { Success = false, Message = "დაბადების თარიღი არ შეიძლება იყოს 100 წელზე უფრო ძველი" });
+
             var entity = new Employee
             {
                 PersonalNumber = model.PersonalNumber,
@@ -64,13 +75,29 @@ namespace HrApp.Api.Controllers
                 BirthDate = model.BirthDate,
                 Email = model.Email,
                 PositionId = model.PositionId,
-                Status = (EmployeeStatus)model.Status,
+                Status = EmployeeStatus.Inactive,
                 DismissalDate = model.DismissalDate,
-                IsActive = false
+                IsActive = false,
+                CreatedAt = DateTime.UtcNow
             };
-            entity.Status = EmployeeStatus.Inactive;
 
             var created = await _employeeRepository.AddAsync(entity);
+
+            // Schedule activation job for 1 hour after creation
+            var scheduler = await _schedulerFactory.GetScheduler();
+            var jobKey = new JobKey($"ActivateEmployee_{created.Id}", "EmployeeActivation");
+            var job = JobBuilder.Create<HrApp.Infrastructure.Jobs.ActivateEmployeeJob>()
+                .WithIdentity(jobKey)
+                .UsingJobData("EmployeeId", created.Id)
+                .Build();
+
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity($"ActivateEmployeeTrigger_{created.Id}", "EmployeeActivation")
+                .StartAt(DateTimeOffset.UtcNow.AddHours(1))
+                .Build();
+
+            await scheduler.ScheduleJob(job, trigger);
+
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -85,6 +112,21 @@ namespace HrApp.Api.Controllers
             if (await _employeeRepository.ExistsByPersonalNumberOrEmailAsync(model.PersonalNumber, model.Email, excludeId: id))
                 return BadRequest(new { Success = false, Message = "ასეთი თანამშრომელი უკვე არსებობს" });
 
+            var today = DateTime.UtcNow.Date;
+            var birthDate = model.BirthDate.Date;
+            var minDate = today.AddYears(-100);
+            if (birthDate > today)
+                return BadRequest(new { Success = false, Message = "დაბადების თარიღი არ შეიძლება იყოს მომავალი" });
+            if (birthDate < minDate)
+                return BadRequest(new { Success = false, Message = "დაბადების თარიღი არ შეიძლება იყოს 100 წელზე უფრო ძველი" });
+
+            // Prevent changing status to Active for fresh employees (created less than 1 hour ago and inactive)
+            var isFreshEmployee = existing.CreatedAt > DateTime.UtcNow.AddHours(-1);
+            if (isFreshEmployee && !existing.IsActive && model.Status == (int)EmployeeStatus.Active)
+            {
+                return BadRequest(new { Success = false, Message = "ახალი თანამშრომელი ავტომატურად გააქტიურდება 1 საათის შემდეგ. სტატუსის ხელით შეცვლა შეუძლებელია." });
+            }
+
             existing.PersonalNumber = model.PersonalNumber;
             existing.FirstName = model.FirstName;
             existing.LastName = model.LastName;
@@ -94,6 +136,17 @@ namespace HrApp.Api.Controllers
             existing.PositionId = model.PositionId;
             existing.Status = (EmployeeStatus)model.Status;
             existing.DismissalDate = model.DismissalDate;
+            
+            // Sync IsActive with Status: Active status means IsActive should be true
+            // For fresh employees (created less than 1 hour ago), keep IsActive false even if Status is Active
+            if (existing.Status == EmployeeStatus.Active && !isFreshEmployee)
+            {
+                existing.IsActive = true;
+            }
+            else if (existing.Status != EmployeeStatus.Active)
+            {
+                existing.IsActive = false;
+            }
 
             await _employeeRepository.UpdateAsync(existing);
             return Ok(existing);

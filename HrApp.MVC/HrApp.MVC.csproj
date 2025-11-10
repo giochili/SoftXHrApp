@@ -11,4 +11,8 @@
     <ProjectReference Include="..\HrApp.Infrastructure\HrApp.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
+  </ItemGroup>
+
 </Project>

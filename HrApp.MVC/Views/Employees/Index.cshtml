@@ -10,17 +10,17 @@
     <div class="alert alert-success">@TempData["Message"]</div>
 }
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0">თანამშრომლები</h4>
-                    <a class="btn btn-success" asp-action="Create">+ დამატება</a>
+                    <a class="btn btn-success btn-sm" asp-action="Create">+ დამატება</a>
                 </div>
 
                 <form method="get" asp-action="Index" class="mb-3">
-                    <div class="input-group">
+                    <div class="input-group input-group-sm">
                         <input type="text" class="form-control" name="q" value="@Model.Query" placeholder="ძებნა სახელით/გვარით" />
                         <button class="btn btn-primary" type="submit">ძებნა</button>
                     </div>
@@ -32,44 +32,101 @@
                 }
                 else
                 {
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
+                    <div class="table-wrapper">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light sticky-top">
                                 <tr>
-                                    <th>პირადი ნომერი</th>
-                                    <th>სახელი</th>
-                                    <th>გვარი</th>
-                                    <th>პოზიცია</th>
-                                    <th>ელ.ფოსტა</th>
-                                    <th class="text-end">ქმედებები</th>
+                                    <th style="width: 10%;">პირადი ნომერი</th>
+                                    <th style="width: 9%;">სახელი</th>
+                                    <th style="width: 9%;">გვარი</th>
+                                    <th style="width: 14%;">პოზიცია</th>
+                                    <th style="width: 20%;">ელ.ფოსტა</th>
+                                    <th style="width: 17%;">სტატუსი</th>
+                                    <th class="text-end" style="width: 21%;">ქმედებები</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                            @foreach (var e in Model.Employees)
+                        <tbody>
+                        @foreach (var e in Model.Employees)
+                        {
+                            // Ensure CreatedAt is treated as UTC and calculate activation time
+                            // Handle case where CreatedAt might be default or Unspecified kind
+                            DateTime createdAtUtc;
+                            if (e.CreatedAt == default(DateTime))
                             {
-                                <tr>
-                                    <td>@e.PersonalNumber</td>
-                                    <td>@e.FirstName</td>
-                                    <td>@e.LastName</td>
-                                    <td>@(string.IsNullOrEmpty(e.PositionTitle) ? "-" : e.PositionTitle)</td>
-                                    <td>@e.Email</td>
-                                    <td class="text-end">
-                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@e.Id">რედაქტირება</a>
-                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@e.Id">წაშლა</a>
-                                    </td>
-                                </tr>
+                                // If CreatedAt is not set, use current UTC time (shouldn't happen, but safety check)
+                                createdAtUtc = DateTime.UtcNow;
                             }
-                            </tbody>
-                        </table>
+                            else if (e.CreatedAt.Kind == DateTimeKind.Unspecified)
+                            {
+                                createdAtUtc = DateTime.SpecifyKind(e.CreatedAt, DateTimeKind.Utc);
+                            }
+                            else
+                            {
+                                createdAtUtc = e.CreatedAt.ToUniversalTime();
+                            }
+                            var activationTime = createdAtUtc.AddHours(1);
+                            var isFreshAndInactive = !e.IsActive && createdAtUtc > DateTime.UtcNow.AddHours(-1);
+                            <tr data-employee-id="@e.Id" data-created-at="@createdAtUtc.ToString("O")" data-is-active="@e.IsActive.ToString().ToLower()">
+                                <td>@e.PersonalNumber</td>
+                                <td>@e.FirstName</td>
+                                <td>@e.LastName</td>
+                                <td>@(string.IsNullOrEmpty(e.PositionTitle) ? "-" : e.PositionTitle)</td>
+                                <td>@e.Email</td>
+                                <td>
+                                    @{
+                                        var statusText = "";
+                                        var statusClass = "";
+                                        switch (e.Status)
+                                        {
+                                            case 0: // Inactive
+                                                statusText = "არააქტიური";
+                                                statusClass = "bg-warning";
+                                                break;
+                                            case 1: // Active
+                                                statusText = "აქტიური";
+                                                statusClass = "bg-success";
+                                                break;
+                                            case 2: // OffStaff
+                                                statusText = "ოფ-სტაფზე";
+                                                statusClass = "bg-info";
+                                                break;
+                                            case 3: // Fired
+                                                statusText = "დათხოვნილი";
+                                                statusClass = "bg-danger";
+                                                break;
+                                            default:
+                                                statusText = "არააქტიური";
+                                                statusClass = "bg-warning";
+                                                break;
+                                        }
+                                    }
+                                    <span class="badge @statusClass">@statusText</span>
+                                    @if (isFreshAndInactive)
+                                    {
+                                        <div class="countdown-timer text-muted small mt-1" data-activation-time="@activationTime.ToString("O")">
+                                            <span class="countdown-text">გააქტიურება: <span class="time-remaining">--:--:--</span></span>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@e.Id" title="რედაქტირება">✏️</a>
+                                        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@e.Id" title="წაშლა">🗑️</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
                     </div>
                 }
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-3">
                 <h5 class="mb-3">პოზიციების იერარქია</h5>
                 @if (!Model.Positions.Any())
                 {
@@ -128,4 +185,116 @@
         border-radius: 0.4rem;
         display: inline-block;
     }
+
+    .countdown-timer {
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 0.9rem;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem 0.4rem;
+    }
+
+    .table td:nth-child(1),
+    .table td:nth-child(2),
+    .table td:nth-child(3),
+    .table td:nth-child(7) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .table td:nth-child(4),
+    .table td:nth-child(5) {
+        word-break: break-word;
+        max-width: 0;
+    }
+
+    .table th {
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .table td:first-child,
+    .table th:first-child {
+        padding-left: 0.75rem;
+    }
+
+    .table td:last-child,
+    .table th:last-child {
+        padding-right: 0.75rem;
+    }
+
+    .card-body {
+        overflow-x: visible;
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: visible;
+    }
+
+    .sticky-top {
+        z-index: 10;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function updateCountdowns() {
+            const timers = document.querySelectorAll('.countdown-timer');
+            const now = new Date();
+
+            timers.forEach(function(timer) {
+                const activationTimeStr = timer.getAttribute('data-activation-time');
+                if (!activationTimeStr) return;
+
+                // Parse the ISO 8601 date string (handles UTC automatically)
+                const activationTime = new Date(activationTimeStr);
+                
+                // Check if date is valid
+                if (isNaN(activationTime.getTime())) {
+                    console.error('Invalid activation time:', activationTimeStr);
+                    return;
+                }
+
+                const timeRemaining = activationTime.getTime() - now.getTime();
+                const timeRemainingSpan = timer.querySelector('.time-remaining');
+
+                if (!timeRemainingSpan) return;
+
+                if (timeRemaining <= 0) {
+                    timeRemainingSpan.textContent = 'გააქტიურდა';
+                    timer.classList.add('text-success');
+                    return;
+                }
+
+                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+                const formattedTime = 
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+
+                timeRemainingSpan.textContent = formattedTime;
+            });
+        }
+
+        // Update countdowns immediately and then every second
+        updateCountdowns();
+        setInterval(updateCountdowns, 1000);
+    });
+</script>

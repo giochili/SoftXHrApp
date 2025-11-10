@@ -42,7 +42,8 @@ namespace HrApp.MVC.Controllers
                 return RedirectToAction("Login", "Account");
 
             await PopulatePositionOptions();
-            return View(new EmployeeViewModel());
+            var model = new EmployeeViewModel { Status = 0 }; // Inactive by default
+            return View(model);
         }
 
         [HttpPost]
@@ -56,6 +57,8 @@ namespace HrApp.MVC.Controllers
                 await PopulatePositionOptions();
                 return View(model);
             }
+            // Ensure status is always Inactive (0) for new employees
+            model.Status = 0;
             var result = await _apiService.CreateEmployeeAsync(model);
             if (result.Success)
             {
@@ -72,6 +75,7 @@ namespace HrApp.MVC.Controllers
         {
         if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
             return RedirectToAction("Login", "Account");
+            await PopulatePositionOptions();
             var employee = await _apiService.GetEmployeeAsync(id);
             if (employee == null) return NotFound();
             return View(employee);
@@ -82,6 +86,7 @@ namespace HrApp.MVC.Controllers
         {
         if (string.IsNullOrWhiteSpace(_httpContextAccessor.HttpContext?.Session.GetString("jwt")))
             return RedirectToAction("Login", "Account");
+            await PopulatePositionOptions();
             if (!ModelState.IsValid) return View(model);
             var result = await _apiService.UpdateEmployeeAsync(id, model);
             if (result.Success)

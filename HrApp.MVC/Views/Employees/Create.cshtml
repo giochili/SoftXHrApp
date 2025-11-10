@@ -28,7 +28,10 @@
         </div>
         <div class="col-md-6 mb-3">
             <label class="form-label">დაბ. თარიღი</label>
-            <input asp-for="BirthDate" type="date" class="form-control" />
+            <input asp-for="BirthDate" type="date" class="form-control" 
+                   max="@DateTime.Now.ToString("yyyy-MM-dd")" 
+                   min="@DateTime.Now.AddYears(-100).ToString("yyyy-MM-dd")" />
+            <span asp-validation-for="BirthDate" class="text-danger"></span>
         </div>
     </div>
     <div class="mb-3">
@@ -39,35 +42,140 @@
     var positionOptions = ViewBag.PositionOptions as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label class="form-label">პოზიცია</label>
-            @if (!positionOptions.Any())
-            {
-                <div class="text-muted small">პოზიციების ჩამონათვალი ვერ ჩაიტვირთა</div>
-            }
-            else
-            {
-                @Html.DropDownListFor(m => m.PositionId, positionOptions, "აირჩიეთ პოზიცია", new { @class = "form-select" })
-            }
-            <span asp-validation-for="PositionId" class="text-danger"></span>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label">სტატუსი</label>
-            <select asp-for="Status" class="form-select">
-                <option value="0">Inactive</option>
-                <option value="1">Active</option>
-                <option value="2">OffStaff</option>
-                <option value="3">Fired</option>
-            </select>
-        </div>
-    </div>
     <div class="mb-3">
-        <label class="form-label">დათხოვნის თარიღი</label>
-        <input asp-for="DismissalDate" type="date" class="form-control" />
+        <label class="form-label">პოზიცია</label>
+        @if (!positionOptions.Any())
+        {
+            <div class="text-muted small">პოზიციების ჩამონათვალი ვერ ჩაიტვირთა</div>
+        }
+        else
+        {
+            @Html.DropDownListFor(m => m.PositionId, positionOptions, "აირჩიეთ პოზიცია", new { @class = "form-select" })
+        }
+        <span asp-validation-for="PositionId" class="text-danger"></span>
     </div>
+    <input type="hidden" asp-for="Status" value="0" />
     <button type="submit" class="btn btn-primary">შენახვა</button>
     <a asp-action="Index" class="btn btn-secondary">უკან</a>
 </form>
 
 <partial name="_ValidationScriptsPartial" />
+
+<style>
+    /* Soft, pleasant form styling for light mode */
+    .form-control, .form-select {
+        background-color: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.95rem;
+        color: #1e293b;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #ffffff;
+        border-color: #5b8cff;
+        box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.1);
+        outline: none;
+        color: #1e293b;
+    }
+
+    .form-control:hover, .form-select:hover {
+        border-color: #cbd5e1;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control::placeholder {
+        color: #94a3b8;
+        opacity: 0.7;
+    }
+
+    /* Date input styling */
+    input[type="date"].form-control {
+        color-scheme: light;
+    }
+
+    input[type="date"].form-control::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.7;
+    }
+
+    input[type="date"].form-control::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+
+    /* Select dropdown styling */
+    .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+        padding-right: 2.5rem;
+    }
+
+    .form-select:focus {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%235b8cff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    }
+
+    /* Button styling */
+    .btn-primary {
+        background: linear-gradient(135deg, #5b8cff 0%, #4a78e6 100%);
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #4a78e6 0%, #3c63bf 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(91, 140, 255, 0.3);
+    }
+
+    .btn-secondary {
+        background-color: #f1f5f9;
+        border: 1.5px solid #e2e8f0;
+        color: #475569;
+        border-radius: 0.5rem;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: #e2e8f0;
+        border-color: #cbd5e1;
+        color: #334155;
+    }
+
+    /* Form container */
+    form {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Validation messages */
+    .text-danger {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Heading */
+    h2 {
+        color: #1e293b;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+</style>
